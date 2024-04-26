@@ -9,8 +9,6 @@ export const load = async ({ params }) => {
         expand: "bidder"
     });
 
-    console.log(bids)
-
     return {
         listing: listing,
         bids: bids

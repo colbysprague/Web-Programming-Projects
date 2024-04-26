@@ -1,7 +1,7 @@
 <script>
     import { onMount, onDestroy } from "svelte";
     import { pb } from "../../../lib/pocketbase";
-    import ListingIdv from "../../../lib/ListingIdv.svelte";
+    import Auction from "../../../lib/Auction.svelte";
     export let data;
 
     let listing = data.listing;
@@ -15,6 +15,8 @@
             async ({ action, record }) => {
                 // on update event
                 if (action === "update") {
+                    console.log("listing updated");
+                    console.log(record);
                     listing = record;
                 }
 
@@ -42,4 +44,4 @@
     });
 </script>
 
-<ListingIdv {listing} {bids} />
+<Auction {listing} {bids} />

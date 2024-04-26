@@ -1,4 +1,6 @@
 <script>
+    import Timer from "./Timer.svelte";
+
     export let listing;
     console.log(listing);
 </script>
@@ -24,14 +26,7 @@
             </h5>
         </a>
         <div class="flex items-center mt-2.5 mb-5 space-x-2">
-            <span
-                class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800"
-                >Active</span
-            >
-            <span
-                class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-slate-200 dark:text-blue-800"
-                >{listing.created}</span
-            >
+            <Timer endsAt={listing.endsAt} />
         </div>
         <div class="flex items-center justify-between">
             <span class="text-3xl font-bold text-gray-900 dark:text-white"
