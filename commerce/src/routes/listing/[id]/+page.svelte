@@ -1,0 +1,45 @@
+<script>
+    import { onMount, onDestroy } from "svelte";
+    import { pb } from "../../../lib/pocketbase";
+    import ListingIdv from "../../../lib/ListingIdv.svelte";
+    export let data;
+
+    let listing = data.listing;
+    let bids = data.bids;
+    let active = true;
+    console.log(listing.id);
+
+    onMount(async () => {
+        pb.collection("listings").subscribe(
+            listing.id,
+            async ({ action, record }) => {
+                // on update event
+                if (action === "update") {
+                    listing = record;
+                }
+
+                // if deleted
+                if (action === "delete") {
+                    active = false;
+                }
+            },
+            { expand: "seller" },
+        );
+        pb.collection("bids").subscribe(
+            "*",
+            async ({ action, record }) => {
+                // on update event
+                if (action === "create") {
+                    bids = [record, ...bids];
+                }
+            },
+            { expand: "bidder", filter: `bidOn="${listing.id}"` },
+        );
+    });
+
+    onDestroy(() => {
+        pb.collection("listings").unsubscribe(listing.id); // remove all '*' topic subscriptions
+    });
+</script>
+
+<ListingIdv {listing} {bids} />
