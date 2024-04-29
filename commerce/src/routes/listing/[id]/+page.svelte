@@ -25,7 +25,7 @@
                     active = false;
                 }
             },
-            { expand: "seller" },
+            { expand: "seller,highestBid" },
         );
         pb.collection("bids").subscribe(
             "*",

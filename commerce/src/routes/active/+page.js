@@ -3,8 +3,8 @@ import { pb } from '../../lib/pocketbase';
 
 export const load = async () => {
     const listings = await pb.collection('listings').getList(1, 50, {
-        sort: '-endsAt',
-        expand: "seller",
+        sort: 'endsAt',
+        expand: "seller,highestBid",
         filter: "closed = false"
     });
 

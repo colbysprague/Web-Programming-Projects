@@ -1,3 +1,10 @@
+<!-- 
+    TODO
+
+    1. Update winner to bidder w/ highest bid on auction close
+    2. Add watchlist button (w/ counter?)
+ -->
+
 <script>
     import { afterUpdate, tick } from "svelte";
     import { pb, currentUser } from "./pocketbase";
@@ -34,14 +41,25 @@
         const updatedListing = await pb
             .collection("listings")
             .update(listing.id, {
-                highestBid: newBid.amount,
+                highestBid: newBid.id,
+                highestBidAmt: newBid.amount,
             });
     }
 
-    function closeAuction(msg) {
+    async function closeAuction(msg) {
+        console.log("closing Auction");
         if (!listing.closed) {
-            const auction = pb.collection("listings").update(listing.id, {
+            // get highest bid information
+            const highestBid = await pb
+                .collection("bids")
+                .getOne(listing.highestBid);
+
+            console.log("Highest Bidder is", highestBid);
+
+            // record winner
+            const auction = await pb.collection("listings").update(listing.id, {
                 closed: true,
+                winner: highestBid.bidder,
             });
         }
     }
@@ -111,7 +129,8 @@
                     <li>
                         <span
                             class="font-semibold text-gray-900 dark:text-white"
-                        ></span>
+                            >{bid?.expand?.bidder?.username}</span
+                        >
                         bids
                         <span
                             class="font-semibold text-gray-900 dark:text-white"
@@ -122,33 +141,47 @@
                 {/each}
             </ul>
         </div>
-        <div class="flex items-center justify-between">
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">
-                ${listing.highestBid}
-                <span class="text-sm font-thin"> Current Bid</span></span
-            >
-        </div>
-
-        <form on:submit|preventDefault>
-            <div class="flex justify-start space-x-2 mt-1">
-                <input
-                    bind:value={bidAmount}
-                    min={listing.highestBid}
-                    type="number"
-                    id="number-input"
-                    aria-describedby="helper-text-explanation"
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder={listing.highestBid + 1}
-                    required
-                />
-
-                <button
-                    on:click={placeBid}
-                    disabled={bidAmount <= listing.highestBid}
-                    class={`${bidAmount <= listing.highestBid ? "bg-gray-400 cursor-not-allowed" : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"} font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 dark:text-white`}
-                    >Place Bid</button
+        {#if listing.closed}
+            <div class="flex items-center justify-between">
+                {#if listing.winner === $currentUser.id}
+                    <span
+                        class="bg-blue-100 text-blue-800 text-s font-semibold px-2.5 py-0.5 rounded dark:bg-slate-200 dark:text-blue-800"
+                        >You won this auction</span
+                    >
+                {/if}
+                <span class="text-3xl font-bold text-gray-900 dark:text-white">
+                    ${listing.highestBidAmt}
+                </span>
+            </div>
+        {:else}
+            <div class="flex items-center justify-between">
+                <span class="text-3xl font-bold text-gray-900 dark:text-white">
+                    ${listing.highestBidAmt}
+                    <span class="text-sm font-thin"> Current Bid</span></span
                 >
             </div>
-        </form>
+
+            <form on:submit|preventDefault>
+                <div class="flex justify-start space-x-2 mt-1">
+                    <input
+                        bind:value={bidAmount}
+                        min={listing.highestBidAmt}
+                        type="number"
+                        id="number-input"
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder={listing.highestBidAmt + 1}
+                        required
+                    />
+
+                    <button
+                        on:click={placeBid}
+                        disabled={bidAmount <= listing.highestBidAmt}
+                        class={`${bidAmount <= listing.highestBidAmt ? "bg-gray-400 cursor-not-allowed" : "bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300"} font-medium rounded-lg text-sm px-5 py-2.5 text-center text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 dark:text-white`}
+                        >Place Bid</button
+                    >
+                </div>
+            </form>
+        {/if}
     </div>
 </div>

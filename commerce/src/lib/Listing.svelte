@@ -1,8 +1,6 @@
 <script>
     import Timer from "./Timer.svelte";
-
     export let listing;
-    console.log(listing);
 </script>
 
 <div
@@ -30,7 +28,7 @@
         </div>
         <div class="flex items-center justify-between">
             <span class="text-3xl font-bold text-gray-900 dark:text-white"
-                >${listing.highestBid}</span
+                >${listing.highestBidAmt}</span
             >
             <a
                 href={`./listing/${listing.id}`}

@@ -1,3 +1,12 @@
+<!-- 
+    TODO 
+    1. Update fields to inlcude
+        - auction duration
+        - default bid
+        - closed = false (to be safe)
+        - winner -> None
+-->
+
 <script>
     import { currentUser, pb } from "../../lib/pocketbase";
     import { goto } from "$app/navigation";
@@ -5,6 +14,16 @@
     let title = "";
     let file;
     let category;
+    let startingBid = 10;
+    let duration = 0;
+    let closeDate;
+
+    $: {
+        const currentDate = new Date();
+        closeDate = new Date(
+            currentDate.getTime() + duration * 24 * 60 * 60 * 1000,
+        ); // Add days in milliseconds
+    }
 
     let previewURL = "";
 
@@ -15,12 +34,13 @@
     }
 
     async function createListing() {
-        console.log("calling createListing");
         const data = {
             title: title,
             thumbnail: file,
             category: category,
             seller: $currentUser.id,
+            endsAt: closeDate,
+            highestBidAmt: startingBid,
         };
 
         const record = await pb.collection("listings").create(data);
@@ -28,10 +48,6 @@
 </script>
 
 <div class="w-full flex justify-center">
-    <!-- {title}
-    {imageFile}
-    {category} -->
-
     <div
         class=" m-10 w-[1/2] p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-8 dark:bg-gray-800 dark:border-gray-700"
     >
@@ -43,7 +59,11 @@
         >
             <form on:submit|preventDefault class="space-y-4 mt-4">
                 {#if previewURL}
-                    <img src={previewURL} alt="" />
+                    <img
+                        src={previewURL}
+                        alt=""
+                        class="max-w-[300px] max-h-[400px] mx-auto"
+                    />
                 {/if}
                 <label
                     class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
@@ -80,22 +100,61 @@
 
                 <div>
                     <label
-                        for="countries"
+                        for="category"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                        >Select a category</label
+                        >Category</label
                     >
                     <select
                         id="countries"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         bind:value={category}
                     >
-                        <option selected disabled>Choose a country</option>
+                        <option selected disabled>Choose a category</option>
                         <option value="Vehicle">Vehicle</option>
                         <option value="Home">Home</option>
-                        <option value="Electronic">Electronic</option>
-                        <option value="Kitchen">Kitchen</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Garden">Garden</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Misc.">Misc.</option>
                     </select>
                 </div>
+                <div>
+                    <label
+                        for="duration"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Auction Duration</label
+                    >
+                    <select
+                        id="countries"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        bind:value={duration}
+                    >
+                        <option selected disabled>Choose Duration</option>
+                        <option value="1">1 Day</option>
+                        <option value="3">3 Days</option>
+                        <option value="7">7 Days</option>
+                        <option value="10">10 Days</option>
+                    </select>
+                </div>
+                <div>
+                    <label
+                        for="duration"
+                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >Starting Bid</label
+                    >
+
+                    <input
+                        bind:value={startingBid}
+                        min="0"
+                        type="number"
+                        id="number-input"
+                        aria-describedby="helper-text-explanation"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="$10"
+                        required
+                    />
+                </div>
+
                 <br />
                 <button
                     on:click={() => createListing()}

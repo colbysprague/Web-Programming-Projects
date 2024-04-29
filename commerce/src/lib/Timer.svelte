@@ -40,7 +40,7 @@
         {#if !count}
             Loading...
         {:else}
-            {`${h} hours ${m} minutes ${s} seconds remaining`}
+            {`${h} hr ${m} min ${s} sec`}
         {/if}
     </span>
 {/if}
