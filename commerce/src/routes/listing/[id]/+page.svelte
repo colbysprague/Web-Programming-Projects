@@ -6,6 +6,7 @@
 
     let listing = data.listing;
     let bids = data.bids;
+    let watching = data.watching;
     let active = true;
     console.log(listing.id);
 
@@ -44,4 +45,4 @@
     });
 </script>
 
-<Auction {listing} {bids} />
+<Auction {listing} {watching} {bids} />

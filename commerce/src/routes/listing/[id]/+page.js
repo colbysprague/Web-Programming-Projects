@@ -1,5 +1,6 @@
 
-import { pb } from '../../../lib/pocketbase';
+import { pb, currentUser } from '../../../lib/pocketbase';
+import { get } from 'svelte/store'
 
 export const load = async ({ params }) => {
     const listing = await pb.collection('listings').getOne(params.id);
@@ -9,8 +10,24 @@ export const load = async ({ params }) => {
         expand: "bidder"
     });
 
+    const userInfo = get(currentUser)
+
+
+    const watchingRecord = await pb.collection('watches').getList(1, 50, {
+        filter: `watching="${listing.id}" && watcher="${userInfo?.id}"`
+    })
+
+
+    let watching = false
+    if (watchingRecord?.items.length > 0) {
+        watching = true
+    }
+
+    console.log(watchingRecord.items[0])
+
     return {
         listing: listing,
-        bids: bids
+        bids: bids,
+        watching: watching
     };
 };

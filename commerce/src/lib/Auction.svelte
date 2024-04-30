@@ -1,34 +1,33 @@
 <!-- 
     TODO
 
-    1. Update winner to bidder w/ highest bid on auction close
-    2. Add watchlist button (w/ counter?)
+    [x] 1. Update winner to bidder w/ highest bid on auction close
+    [] 2. Add watchlist button (w/ counter?)
  -->
 
 <script>
-    import { afterUpdate, tick } from "svelte";
+    import { afterUpdate, onMount } from "svelte";
     import { pb, currentUser } from "./pocketbase";
     import Timer from "./Timer.svelte";
 
     export let listing;
     export let bids;
+    export let watching;
 
+    // scroll behavior for bids
     let element;
-
     afterUpdate(() => {
         if (bids) scrollToBottom(element);
     });
-
     $: if (bids && element) {
         scrollToBottom(element);
     }
-
     const scrollToBottom = async (node) => {
         node.scroll({ top: node.scrollHeight, behavior: "smooth" });
     };
 
+    // place bid
     let bidAmount = listing.highestBid;
-
     async function placeBid() {
         // create bid
         const bidData = {
@@ -46,6 +45,7 @@
             });
     }
 
+    // close auction
     async function closeAuction(msg) {
         console.log("closing Auction");
         if (!listing.closed) {
@@ -61,6 +61,29 @@
                 closed: true,
                 winner: highestBid.bidder,
             });
+        }
+    }
+
+    // watchlist behavior
+    async function toggleWatchlist() {
+        if (watching) {
+            // console.log(watchingRecord);
+            // creating watching
+            const newWatchRecord = await pb.collection("watches").create({
+                watching: listing.id,
+                watcher: $currentUser.id,
+            });
+        } else {
+            // removing watching
+            const watchingRecord = await pb
+                .collection("watches")
+                .getList(1, 50, {
+                    filter: `watching="${listing.id}" && watcher="${$currentUser?.id}"`,
+                });
+
+            const deletedRecord = await pb
+                .collection("watches")
+                .delete(watchingRecord.items[0].id);
         }
     }
 </script>
@@ -79,13 +102,32 @@
     </a>
 
     <div class="px-5 pb-5">
-        <a href="#">
+        <div class="w-full flex justify-between">
             <h5
                 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white"
             >
                 {listing.title}
             </h5>
-        </a>
+
+            <div>
+                <label class="inline-flex cursor-pointer">
+                    <input
+                        type="checkbox"
+                        bind:checked={watching}
+                        on:change={toggleWatchlist}
+                        class="sr-only peer"
+                    />
+                    <div
+                        class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+                    ></div>
+                    <span
+                        class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300"
+                        >Watching</span
+                    >
+                </label>
+            </div>
+        </div>
+
         <div class="flex items-center mt-2.5 mb-5 space-x-2">
             {#if !listing.closed}
                 <Timer endsAt={listing.endsAt} on:closeAuction={closeAuction} />
