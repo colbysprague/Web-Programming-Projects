@@ -1,18 +1,41 @@
-<!-- 
-    TODO
-
-    [x] 1. Update winner to bidder w/ highest bid on auction close
-    [] 2. Add watchlist button (w/ counter?)
- -->
-
+<!-- TODO
+    [ ] Mark winner on auction closing
+        - check if there is a highest bid, if not then just close with no winner
+-->
 <script>
-    import { afterUpdate, onMount } from "svelte";
+    import { afterUpdate, onMount, onDestroy } from "svelte";
+    import { goto } from "$app/navigation";
     import { pb, currentUser } from "./pocketbase";
     import Timer from "./Timer.svelte";
 
     export let listing;
     export let bids;
     export let watching;
+
+    onMount(async () => {
+        pb.collection("listings").subscribe(
+            listing.id,
+            async ({ action, record }) => {
+                console.log(action, record);
+
+                // on update event
+                if (action === "update") {
+                    // replace changed document with new data
+                    listing = record;
+                }
+
+                // if deleted
+                if (action === "delete") {
+                    goto("../active");
+                }
+            },
+            { expand: "seller" },
+        );
+    });
+
+    onDestroy(() => {
+        pb.collection("listings").unsubscribe("*"); // remove all '*' topic subscriptions
+    });
 
     // scroll behavior for bids
     let element;
@@ -49,17 +72,18 @@
     async function closeAuction(msg) {
         console.log("closing Auction");
         if (!listing.closed) {
-            // get highest bid information
-            const highestBid = await pb
-                .collection("bids")
-                .getOne(listing.highestBid);
+            let auctionHasBids = !listing.highestBid === "";
 
-            console.log("Highest Bidder is", highestBid);
+            if (auctionHasBids) {
+                const highestBid = await pb
+                    .collection("bids")
+                    .getOne(listing.highestBid);
+            }
 
             // record winner
             const auction = await pb.collection("listings").update(listing.id, {
                 closed: true,
-                winner: highestBid.bidder,
+                winner: auctionHasBids ? highestBid.bidder : "",
             });
         }
     }

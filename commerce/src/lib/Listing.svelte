@@ -1,6 +1,33 @@
 <script>
+    import { onMount, onDestroy } from "svelte";
+    import { pb } from "../lib/pocketbase";
     import Timer from "./Timer.svelte";
     export let listing;
+
+    onMount(async () => {
+        pb.collection("listings").subscribe(
+            listing.id,
+            async ({ action, record }) => {
+                console.log(action, record);
+
+                // on update event
+                if (action === "update") {
+                    // replace changed document with new data
+                    listing = record;
+                }
+
+                // if deleted
+                if (action === "delete") {
+                    goto("../active");
+                }
+            },
+            { expand: "seller" },
+        );
+    });
+
+    onDestroy(() => {
+        pb.collection("listings").unsubscribe("*"); // remove all '*' topic subscriptions
+    });
 </script>
 
 <div

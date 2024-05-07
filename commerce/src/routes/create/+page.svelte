@@ -44,6 +44,10 @@
         };
 
         const record = await pb.collection("listings").create(data);
+
+        if (record) {
+            goto("../active");
+        }
     }
 </script>
 

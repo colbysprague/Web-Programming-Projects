@@ -6,8 +6,6 @@
     export let data;
     let activeListings = data.listings.items;
 
-    console.log(activeListings);
-
     function getListingIdxById(recordId) {
         return activeListings.findIndex((item) => item.id === recordId);
     }

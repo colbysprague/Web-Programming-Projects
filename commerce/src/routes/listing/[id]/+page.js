@@ -10,6 +10,7 @@ export const load = async ({ params }) => {
         expand: "bidder"
     });
 
+    // access userStore in page.js file
     const userInfo = get(currentUser)
 
 
@@ -22,8 +23,6 @@ export const load = async ({ params }) => {
     if (watchingRecord?.items.length > 0) {
         watching = true
     }
-
-    console.log(watchingRecord.items[0])
 
     return {
         listing: listing,
